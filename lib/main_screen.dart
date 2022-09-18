@@ -1,8 +1,11 @@
 import 'package:communication_app/chats/screens/conversation_screen.dart';
 import 'package:communication_app/models/app_data.dart';
+import 'package:communication_app/providers/change_notifiers/auth_notifier.dart';
+import 'package:communication_app/providers/change_notifiers/home_notifier.dart';
 import 'package:communication_app/widgets/chat_head.dart';
 import 'package:communication_app/widgets/chat_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -53,6 +56,18 @@ class _MainScreenState extends State<MainScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    final userId =
+        Provider.of<AuthNotifier>(context, listen: false).currentUser!.uid;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      print('INSIDE BINDINGS');
+      await Provider.of<HomeNotifier>(context, listen: false)
+          .getUserChats(userId: userId);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -92,29 +107,58 @@ class _MainScreenState extends State<MainScreen> {
               },
             ),
           ),
-          Expanded(
-            child: Container(
-              color: Colors.white,
-              child: ListView.builder(
-                  itemCount: allchats.length,
-                  itemBuilder: (context, index) {
-                    return ChatTileWidget(
-                        onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => ConversatoinScreen(
-                                    messages: allchats[index].chatMessage!,
-                                    userName: allchats[index].title,
-                                    image:allchats[index].image,
-                                    ))),
-                        userName: allchats[index].title,
-                        image: allchats[index].image,
-                        lastMessage: allchats[index].decription,
-                        time: allchats[index].time,
-                        unseenMessage: allchats[index].messagen);
-                  }),
-            ),
-          )
+          Consumer<HomeNotifier>(builder: (context, notifier, child) {
+            return notifier.isLoading == true
+                ? Expanded(
+                    child: Container(
+                      color: Colors.white,
+                      child: const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  )
+                : notifier.userChats.isEmpty
+                    ? Expanded(
+                        child: Container(
+                          color: Colors.white,
+                          child: const Center(
+                            child: Text('No chats found'),
+                          ),
+                        ),
+                      )
+                    : Expanded(
+                        child: Container(
+                          color: Colors.white,
+                          child: ListView.builder(
+                              itemCount: notifier.userChats.length,
+                              itemBuilder: (context, index) {
+                                final indexItem = notifier.userChats[index];
+                                return ChatTileWidget(
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) => ConversatoinScreen(
+                                                messages: allchats[index]
+                                                    .chatMessage!,
+                                                userName: allchats[index].title,
+                                                image: allchats[index].image,
+                                              ))),
+                                  userName: indexItem.recieverName,
+                                  image: const Image(
+                                      image:
+                                          AssetImage('assets/images/i4.jpeg')),
+                                  lastMessage: indexItem.lastMessage,
+                                  time: TimeOfDay.fromDateTime(
+                                          indexItem.lastMessageTime)
+                                      .toString(),
+                                  unseenMessage: indexItem
+                                      .numberOfUnreadMessages
+                                      .toString(),
+                                );
+                              }),
+                        ),
+                      );
+          }),
         ],
       ),
     );

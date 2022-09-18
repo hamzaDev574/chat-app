@@ -1,5 +1,7 @@
 import 'package:communication_app/auth/screens/signup_page.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/change_notifiers/auth_notifier.dart';
 import 'textFormField_widget.dart';
 import 'package:communication_app/main_screen.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +15,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final formKey = GlobalKey<FormState>();
+
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,17 +33,42 @@ class _LoginScreenState extends State<LoginScreen> {
               Container(
                 height: 250,
                 width: 300,
-                decoration:  BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  image: const DecorationImage(image: AssetImage('assets/images/a2.jpeg'),fit: BoxFit.fill)
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    image: const DecorationImage(
+                        image: AssetImage('assets/images/a2.jpeg'),
+                        fit: BoxFit.fill)),
+              ),
+
+              Form(
+                key: formKey,
+                child: Column(
+                  children: [
+                    AuthTextFormFieldWidget(
+                      controller: emailController,
+                      hint: 'Enter your email',
+                      isObsecure: false,
+                      validator: (value) {
+                        if (!(value!.contains('@') && value.contains('.com'))) {
+                          return 'Invalid email';
+                        }
+                        return null;
+                      },
+                    ),
+                    AuthTextFormFieldWidget(
+                      controller: passwordController,
+                      hint: 'Enter Passsword',
+                      isObsecure: true,
+                      validator: (value) {
+                        if (value!.length < 6) {
+                          return 'Password must be greater than 6';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
                 ),
               ),
-            
-              const AuthTextFormFieldWidget(
-                  hint: 'Enter your email', isObsecure: false),
-        
-              const AuthTextFormFieldWidget(
-                  hint: 'Enter Passsword', isObsecure: true),
               // SizedBox(
               //   height: 50.0,
               //   width: 300.0,
@@ -49,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
               //       hintStyle:const TextStyle(color: Colors.grey),
               //       filled: true,
               //       fillColor: Colors.white,
-        
+
               //     ),
               //   ),
               // ),
@@ -59,16 +91,29 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          primary: const Color.fromARGB(255, 182, 127, 145)),
-                      onPressed: () {
-                        Navigator.pushNamed(context, MainScreen.routeName);
-                      },
-                      child: const Text('Sign in'))
+                  Consumer<AuthNotifier>(
+                    builder: (context, notifier, child) => ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            primary: const Color.fromARGB(255, 182, 127, 145)),
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+                            print('Go for login');
+
+                            await notifier.loginUser(
+                                email: emailController.text,
+                                password: passwordController.text,
+                                context: context);
+                          }
+                        },
+                        child: notifier.isLoading == true
+                            ? const Center(
+                                child: CircularProgressIndicator(),
+                              )
+                            : const Text('Sign in')),
+                  )
                 ],
               ),
               Row(
