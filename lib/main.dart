@@ -2,8 +2,10 @@ import 'package:communication_app/auth/screens/login_page.dart';
 import 'package:communication_app/auth/screens/signup_page.dart';
 import 'package:communication_app/main_screen.dart';
 import 'package:communication_app/providers/change_notifiers/auth_notifier.dart';
+import 'package:communication_app/providers/change_notifiers/chat_notifier.dart';
 import 'package:communication_app/providers/change_notifiers/home_notifier.dart';
 import 'package:communication_app/splash/splash_screen.dart';
+import 'package:communication_app/widgets/chat_head.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +19,12 @@ Future<void> main() async {
       ChangeNotifierProvider(
         create: (context) => AuthNotifier(),
       ),
-      ChangeNotifierProvider(create: (context) => HomeNotifier())
+      ChangeNotifierProvider(
+        create: (context) => HomeNotifier(),
+      ),
+      ChangeNotifierProvider(
+        create: (context) => ChatNotifier(),
+      )
     ],
     child: const MyApp(),
   ));

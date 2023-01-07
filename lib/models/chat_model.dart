@@ -1,27 +1,40 @@
 class ChatModel {
-  String chatId;
-  bool isRead;
+  String docId;
   String lastMessage;
   DateTime lastMessageTime;
-  int numberOfUnreadMessages;
-  String recieverName;
+  String otherUserAvatar;
+  String otherUserId;
+  String otherUserName;
+  String currentUserId;
 
   ChatModel(
-      {required this.chatId,
-      required this.isRead,
+      {required this.currentUserId,
+      required this.docId,
       required this.lastMessage,
       required this.lastMessageTime,
-      required this.numberOfUnreadMessages,
-      required this.recieverName});
+      required this.otherUserAvatar,
+      required this.otherUserId,
+      required this.otherUserName});
 
   factory ChatModel.fromJson(Map<String, dynamic> json) {
     return ChatModel(
-        chatId: json['chat_id'],
-        isRead: json['is_read'],
+        currentUserId: json['user_id'],
+        docId: json['doc_id'],
         lastMessage: json['last_message'],
         lastMessageTime:
             DateTime.parse(json['last_message_time'].toDate().toString()),
-        numberOfUnreadMessages: json['number_of_unread_messages'],
-        recieverName: json['reciever_name']);
+        otherUserAvatar: json['other_user_avatar'],
+        otherUserId: json['other_user_id'],
+        otherUserName: json['other_user_name']);
   }
+
+  Map<String, dynamic> toJson() => {
+        'user_id': currentUserId,
+        'doc_id': docId,
+        'last_message': lastMessage,
+        'last_message_time': lastMessageTime,
+        'other_user_avatar': otherUserAvatar,
+        'other_user_id': otherUserId,
+        'other_user_name': otherUserName
+      };
 }

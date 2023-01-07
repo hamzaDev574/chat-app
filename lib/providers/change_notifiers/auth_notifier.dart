@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:communication_app/auth/models/user_model.dart';
 import 'package:communication_app/main_screen.dart';
 import 'package:communication_app/network/network.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AuthNotifier extends ChangeNotifier {
@@ -37,7 +38,11 @@ class AuthNotifier extends ChangeNotifier {
       isLoading = true;
       notifyListeners();
       final user = await network.signupUser(
-          email: email, password: password, userName: userName);
+          email: email,
+          password: password,
+          userName: userName,
+          avatarUrl:
+              'https://toppng.com/uploads/preview/cool-avatar-transparent-image-cool-boy-avatar-11562893383qsirclznyw.png');
       currentUser = user;
       isLoading = false;
       notifyListeners();
@@ -57,5 +62,10 @@ class AuthNotifier extends ChangeNotifier {
     } catch (e) {
       log('Error in currenUser: $e');
     }
+  }
+
+  Future<void> logOut() async {
+    await FirebaseAuth.instance.signOut();
+    currentUser = null;
   }
 }
