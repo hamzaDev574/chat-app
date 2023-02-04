@@ -129,10 +129,16 @@ class _MainScreenState extends State<MainScreen> {
                           child: ListView.builder(
                               itemCount: notifier.userChats.length,
                               itemBuilder: (context, index) {
+                                final userId = Provider.of<AuthNotifier>(
+                                        context,
+                                        listen: false)
+                                    .currentUser!
+                                    .uid;
                                 final indexItem = notifier.userChats[index];
+                                final users =
+                                    context.read<HomeNotifier>().randomUsers;
                                 return ChatTileWidget(
                                   onTap: () {
-                                    //TODO:
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -142,7 +148,15 @@ class _MainScreenState extends State<MainScreen> {
                                                     listen: false)
                                                 .currentUser!
                                                 .uid,
-                                            otherUserId: indexItem.otherUserId,
+                                            otherUserId: indexItem
+                                                        .otherUserId ==
+                                                    Provider.of<AuthNotifier>(
+                                                            context,
+                                                            listen: false)
+                                                        .currentUser!
+                                                        .uid
+                                                ? indexItem.currentUserId
+                                                : indexItem.otherUserId,
                                             otherUserName:
                                                 indexItem.otherUserName,
                                             otherUserAvatar:
@@ -150,7 +164,14 @@ class _MainScreenState extends State<MainScreen> {
                                       ),
                                     );
                                   },
-                                  userName: indexItem.otherUserName,
+                                  userName: indexItem.currentUserId == userId
+                                      ? indexItem.otherUserName
+                                      : users
+                                          .where((element) =>
+                                              element.uid ==
+                                              indexItem.currentUserId)
+                                          .first
+                                          .userName,
                                   image: Image(
                                       image: NetworkImage(
                                           indexItem.otherUserAvatar)),

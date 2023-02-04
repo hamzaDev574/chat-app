@@ -1,6 +1,7 @@
 import 'package:communication_app/models/chat_model.dart';
 import 'package:communication_app/providers/change_notifiers/auth_notifier.dart';
 import 'package:communication_app/providers/change_notifiers/chat_notifier.dart';
+import 'package:communication_app/providers/change_notifiers/home_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -26,6 +27,15 @@ class ConversationScreen extends StatefulWidget {
 
 class _ConversationScreenState extends State<ConversationScreen> {
   final messageController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ChatNotifier>(context, listen: false).getUserConversation(
+          userId: widget.userId, otherUserId: widget.otherUserId);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +80,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   userId: widget.userId, otherUserId: widget.otherUserId),
               builder: (context, AsyncSnapshot<List<Message>> snapshot) {
                 if (!snapshot.hasData) {
-                  return const CircularProgressIndicator.adaptive();
+                  return const Center(
+                      child: CircularProgressIndicator.adaptive());
                 } else {
                   final messages = snapshot.data;
                   return messages == null || messages.isEmpty
@@ -144,6 +155,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
                           if (messageController.text.isEmpty) {
                             return;
                           }
+                          if (messageController.text.length > 700) {
+                            return;
+                          }
                           if (Provider.of<ChatNotifier>(context, listen: false)
                               .userMessages
                               .isEmpty) {
@@ -173,8 +187,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                       'user_id': userId,
                                     },
                                     otherUserId: widget.otherUserId);
-                          } else {
+                            Provider.of<HomeNotifier>(context, listen: false)
+                                .addNewChat(chat: chat);
                             messageController.clear();
+                          } else {
                             await Provider.of<ChatNotifier>(context,
                                     listen: false)
                                 .sendMessage(
@@ -182,6 +198,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                     message: messageController.text,
                                     userId: widget.userId,
                                     otherUserId: widget.otherUserId);
+                            messageController.clear();
                           }
                         },
                         icon: const Icon(

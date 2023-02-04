@@ -15,7 +15,6 @@ class HomeNotifier extends ChangeNotifier {
   List<UserModel> randomUsers = List.empty(growable: true);
 
   Future<void> getUserChats({required userId}) async {
-    print('INSIDE CHATS NOTIFIER');
     try {
       isLoading = true;
       notifyListeners();
@@ -44,5 +43,10 @@ class HomeNotifier extends ChangeNotifier {
       notifyListeners();
       log('Error in chats: $e');
     }
+  }
+
+  void addNewChat({required ChatModel chat}) {
+    userChats.add(chat);
+    notifyListeners();
   }
 }
