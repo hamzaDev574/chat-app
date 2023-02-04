@@ -46,7 +46,7 @@ class HomeNotifier extends ChangeNotifier {
   }
 
   void addNewChat({required ChatModel chat}) {
-    userChats.add(chat);
+    userChats.insert(0, chat);
     notifyListeners();
   }
 }

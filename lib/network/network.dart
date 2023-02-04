@@ -73,19 +73,24 @@ class Network {
 
   Future<List<ChatModel>> getUserChats({required String userId}) async {
     try {
-      final chats = await _firestore
-          .collection('Chats')
-          .where('user_id', isEqualTo: userId)
-          .get();
-      if (chats.docs.isEmpty) {
-        final chats = await _firestore
-            .collection('Chats')
-            .where('other_user_id', isEqualTo: userId)
-            .get();
-        return chats.docs.map((e) => ChatModel.fromJson(e.data())).toList();
-      } else {
-        return chats.docs.map((e) => ChatModel.fromJson(e.data())).toList();
-      }
+      final chats = await _firestore.collection('Chats').get();
+      final userChats =
+          chats.docs.map((e) => ChatModel.fromJson(e.data())).toList();
+      final userAllChats =
+          userChats.where((element) => element.currentUserId == userId);
+      final moreUserchats =
+          userChats.where((element) => element.otherUserId == userId);
+      return [...userAllChats, ...moreUserchats];
+
+      // if (chats.docs.isEmpty) {
+      //   final chats = await _firestore
+      //       .collection('Chats')
+      //       .where('other_user_id', isEqualTo: userId)
+      //       .get();
+      //   return chats.docs.map((e) => ChatModel.fromJson(e.data())).toList();
+      // } else {
+      return chats.docs.map((e) => ChatModel.fromJson(e.data())).toList();
+      // }
     } catch (e) {
       rethrow;
     }
@@ -165,7 +170,7 @@ class Network {
         .collection('Chats')
         .doc(docId)
         .collection('Messages')
-        .orderBy('message_time', descending: false)
+        .orderBy('message_time', descending: true)
         .snapshots()
         .map((event) =>
             event.docs.map((e) => Message.fromJson(e.data())).toList());

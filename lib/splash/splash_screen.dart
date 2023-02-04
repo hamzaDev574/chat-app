@@ -4,12 +4,13 @@ import 'package:communication_app/providers/change_notifiers/auth_notifier.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
-  static final routeName = '/';
+  static const routeName = '/';
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -35,10 +36,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Image(image: AssetImage('assets/images/a2.jpeg')),
-      ),
+    return Scaffold(
+      body: Center(child: Lottie.asset('assets/animation/chat_animation.json')),
     );
   }
 }
