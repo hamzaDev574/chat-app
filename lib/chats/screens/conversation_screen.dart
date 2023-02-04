@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:communication_app/models/chat_model.dart';
 import 'package:communication_app/providers/change_notifiers/auth_notifier.dart';
 import 'package:communication_app/providers/change_notifiers/chat_notifier.dart';
@@ -8,8 +6,8 @@ import 'package:provider/provider.dart';
 
 import '../../models/message.dart';
 
-class ConversatoinScreen extends StatefulWidget {
-  const ConversatoinScreen(
+class ConversationScreen extends StatefulWidget {
+  const ConversationScreen(
       {Key? key,
       required this.otherUserId,
       required this.otherUserName,
@@ -23,20 +21,11 @@ class ConversatoinScreen extends StatefulWidget {
   final String userId;
 
   @override
-  State<ConversatoinScreen> createState() => _ConversatoinScreenState();
+  State<ConversationScreen> createState() => _ConversationScreenState();
 }
 
-class _ConversatoinScreenState extends State<ConversatoinScreen> {
+class _ConversationScreenState extends State<ConversationScreen> {
   final messageController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ChatNotifier>(context, listen: false).getUserConversation(
-          userId: widget.userId, otherUserId: widget.otherUserId);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,139 +62,138 @@ class _ConversatoinScreenState extends State<ConversatoinScreen> {
           Icon(Icons.call)
         ],
       ),
-      body: Builder(builder: (context) {
-        final isLoading = context
-            .select<ChatNotifier, bool>((notifier) => notifier.isLoading);
-        final userMessages = context.select<ChatNotifier, List<Message>>(
-            (notifier) => notifier.userMessages);
-        final userId = context.read<AuthNotifier>().currentUser!.uid;
-        return Column(
-          children: [
-            Expanded(
-              child: isLoading == true && userMessages.isEmpty
-                  ? Center(
-                      child:
-                          Text('Creating chat with ${widget.otherUserName}..'),
-                    )
-                  : isLoading == true
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder(
+              stream: Provider.of<ChatNotifier>(context).liveChat(
+                  userId: widget.userId, otherUserId: widget.otherUserId),
+              builder: (context, AsyncSnapshot<List<Message>> snapshot) {
+                if (!snapshot.hasData) {
+                  return const CircularProgressIndicator.adaptive();
+                } else {
+                  final messages = snapshot.data;
+                  return messages == null || messages.isEmpty
                       ? Center(
                           child: Text(
-                              'Loading your chat with ${widget.otherUserName}..'),
+                              'Start your conversation with ${widget.otherUserName}'),
                         )
-                      : userMessages.isEmpty
-                          ? Center(
-                              child: Text(
-                                  'Send your first message to ${widget.otherUserName}'),
-                            )
-                          : Container(
-                              child: ListView.builder(
-                                  itemCount: userMessages.length,
-                                  itemBuilder: (context, index) {
-                                    final indexItem = userMessages[index];
-                                    return Row(
-                                      mainAxisAlignment:
-                                          userMessages[index].userId == userId
-                                              ? MainAxisAlignment.end
-                                              : MainAxisAlignment.start,
-                                      children: [
-                                        Container(
-                                          margin: const EdgeInsets.all(10),
-                                          width: 150.0,
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(20.0),
-                                            color: const Color.fromARGB(
-                                                255, 221, 125, 157),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(
-                                                top: 12.0, left: 5.0),
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                  left: 10.0, bottom: 10.0),
-                                              child: Text(indexItem.message),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  }),
-                            ),
+                      : ListView.builder(
+                          itemCount: messages.length,
+                          itemBuilder: (context, index) {
+                            final indexItem = messages[index];
+                            return Row(
+                              mainAxisAlignment:
+                                  indexItem.userId == widget.userId
+                                      ? MainAxisAlignment.end
+                                      : MainAxisAlignment.start,
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.all(10),
+                                  width: 150.0,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20.0),
+                                    color: const Color.fromARGB(
+                                        255, 221, 125, 157),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 12.0, left: 5.0),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 10.0, bottom: 10.0),
+                                      child: Text(indexItem.message),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          });
+                }
+              },
             ),
-            // const Expanded(child: TextField())
-            TextField(
-              style: const TextStyle(color: Colors.black),
-              controller: messageController,
-              decoration: InputDecoration(
-                  border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(20.0),
-                          bottomRight: Radius.circular(20))),
-                  prefixIcon: const Icon(
-                    Icons.add,
-                    color: Colors.grey,
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  hintText: 'Write a message',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  // icon: Icon(Icons.emoji_emotions),
-                  suffixIcon: SizedBox(
-                    width: 100,
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.emoji_emotions,
-                          color: Colors.grey,
-                        ),
-                        IconButton(
-                          onPressed: () async {
-                            if (messageController.text.isEmpty) {
-                              return;
-                            }
-                            if (Provider.of<ChatNotifier>(context,
+          ),
+          // const Expanded(child: TextField())
+          TextField(
+            style: const TextStyle(color: Colors.black),
+            controller: messageController,
+            decoration: InputDecoration(
+                border: const OutlineInputBorder(
+                    borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(20.0),
+                        bottomRight: Radius.circular(20))),
+                prefixIcon: const Icon(
+                  Icons.add,
+                  color: Colors.grey,
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                hintText: 'Write a message',
+                hintStyle: const TextStyle(color: Colors.grey),
+                // icon: Icon(Icons.emoji_emotions),
+                suffixIcon: SizedBox(
+                  width: 100,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.emoji_emotions,
+                        color: Colors.grey,
+                      ),
+                      IconButton(
+                        onPressed: () async {
+                          if (messageController.text.isEmpty) {
+                            return;
+                          }
+                          if (Provider.of<ChatNotifier>(context, listen: false)
+                              .userMessages
+                              .isEmpty) {
+                            final userId = Provider.of<AuthNotifier>(context,
                                     listen: false)
-                                .userMessages
-                                .isEmpty) {
-                              final userId = Provider.of<AuthNotifier>(context,
-                                      listen: false)
-                                  .currentUser!
-                                  .uid;
-                              final chat = ChatModel(
-                                  currentUserId: userId,
-                                  docId: userId,
-                                  lastMessage: messageController.text,
-                                  lastMessageTime: DateTime.now(),
-                                  otherUserAvatar: widget.otherUserAvatar,
-                                  otherUserId: widget.otherUserId,
-                                  otherUserName: widget.otherUserName);
-                              await Provider.of<ChatNotifier>(context,
-                                      listen: false)
-                                  .createChat(chat: chat, message: {
-                                'message_time': DateTime.now(),
-                                'message': messageController.text,
-                                'user_id': userId
-                              });
-                            } else {
-                              await Provider.of<ChatNotifier>(context,
-                                      listen: false)
-                                  .sendMessage(
-                                      messageTime: DateTime.now(),
-                                      message: messageController.text,
-                                      userId: userId);
-                            }
-                          },
-                          icon: const Icon(
-                            Icons.send,
-                          ),
-                        )
-                      ],
-                    ),
-                  )),
-            )
-          ],
-        );
-      }),
+                                .currentUser!
+                                .uid;
+                            final chat = ChatModel(
+                                currentUserId: userId,
+                                docId: Provider.of<ChatNotifier>(context,
+                                        listen: false)
+                                    .createChatId(
+                                        senderId: userId,
+                                        recieverId: widget.otherUserId),
+                                lastMessage: messageController.text,
+                                lastMessageTime: DateTime.now(),
+                                otherUserAvatar: widget.otherUserAvatar,
+                                otherUserId: widget.otherUserId,
+                                otherUserName: widget.otherUserName);
+                            await Provider.of<ChatNotifier>(context,
+                                    listen: false)
+                                .createChat(
+                                    chat: chat,
+                                    message: {
+                                      'message_time': DateTime.now(),
+                                      'message': messageController.text,
+                                      'user_id': userId,
+                                    },
+                                    otherUserId: widget.otherUserId);
+                          } else {
+                            messageController.clear();
+                            await Provider.of<ChatNotifier>(context,
+                                    listen: false)
+                                .sendMessage(
+                                    messageTime: DateTime.now(),
+                                    message: messageController.text,
+                                    userId: widget.userId,
+                                    otherUserId: widget.otherUserId);
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.send,
+                        ),
+                      )
+                    ],
+                  ),
+                )),
+          )
+        ],
+      ),
 
       //  Padding(
       //   padding: const EdgeInsets.only(top:625.0),

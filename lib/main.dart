@@ -37,13 +37,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        theme: ThemeData.dark(),
-        initialRoute: SplashScreen.routeName,
-        routes: {
-          SplashScreen.routeName: (context) => const SplashScreen(),
-          LoginScreen.routeName: (context) => const LoginScreen(),
-          MainScreen.routeName: (context) => const MainScreen(),
-          SignUpPage.routeName: (context) => SignUpPage(),
-        });
+      theme: ThemeData.dark(),
+      initialRoute: SplashScreen.routeName,
+      routes: {
+        SplashScreen.routeName: (context) => const SplashScreen(),
+        LoginScreen.routeName: (context) => const LoginScreen(),
+        MainScreen.routeName: (context) => const MainScreen(),
+        SignUpPage.routeName: (context) => SignUpPage(),
+      },
+    );
   }
 }

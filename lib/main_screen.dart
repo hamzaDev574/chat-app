@@ -92,7 +92,7 @@ class _MainScreenState extends State<MainScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => ConversatoinScreen(
+                                      builder: (_) => ConversationScreen(
                                           userId: Provider.of<AuthNotifier>(
                                                   context,
                                                   listen: false)
@@ -136,7 +136,7 @@ class _MainScreenState extends State<MainScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => ConversatoinScreen(
+                                        builder: (_) => ConversationScreen(
                                             userId: Provider.of<AuthNotifier>(
                                                     context,
                                                     listen: false)

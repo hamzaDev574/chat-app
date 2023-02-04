@@ -73,58 +73,34 @@ class Network {
 
   Future<List<ChatModel>> getUserChats({required String userId}) async {
     try {
-      List<ChatModel> chats = List.empty(growable: true);
-      final userChats = await _firestore
+      final chats = await _firestore
           .collection('Chats')
           .where('user_id', isEqualTo: userId)
           .get();
-      for (final chat in userChats.docs) {
-        chats.add(ChatModel.fromJson(chat.data()));
+      if (chats.docs.isEmpty) {
+        final chats = await _firestore
+            .collection('Chats')
+            .where('other_user_id', isEqualTo: userId)
+            .get();
+        return chats.docs.map((e) => ChatModel.fromJson(e.data())).toList();
+      } else {
+        return chats.docs.map((e) => ChatModel.fromJson(e.data())).toList();
       }
-      return chats;
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<List<Message>> getUserMessages(
-      {required String userId, required String otherUserId}) async {
+  Future<List<Message>> getUserMessages({required String docId}) async {
     try {
-      List<Message> messages = List.empty(growable: true);
-      final to_user = await _firestore
+      final messages = await _firestore
           .collection('Chats')
-          .where('user_id', isEqualTo: userId)
-          .where('other_user_id', isEqualTo: otherUserId)
+          .doc(docId)
+          .collection('Messages')
+          .orderBy('message_time', descending: false)
           .get();
 
-      log('TO USER:: ${to_user.docs.length}');
-
-      final from_user = await _firestore
-          .collection('Chats')
-          .where(
-            'user_id',
-            isEqualTo: otherUserId,
-          )
-          .where('other_user_id', isEqualTo: userId)
-          .get();
-
-      log('FROM USER:: ${from_user.docs.length}');
-
-      // if (userMessages.docs.isEmpty) {
-      return [];
-      // } else {
-      //TODO:
-      // return [];
-      //  for (final message in userMessages) {
-      //   messages.add(Message.fromJson(message.data()));
-      // }
-      // log('USER MESSAGES:: ${messages.length}');
-      // return messages;
-
-      // }
-      // .collection('Messages')
-      // .get();
-
+      return messages.docs.map((e) => Message.fromJson(e.data())).toList();
     } catch (e) {
       rethrow;
     }
@@ -138,13 +114,14 @@ class Network {
     }
   }
 
-  Future<Message> sendMessage({
-    required DateTime messageTime,
-    required String message,
-    required String userId,
-  }) async {
+  Future<Message> sendMessage(
+      {required DateTime messageTime,
+      required String message,
+      required String userId,
+      required String chatDocId,
+      required String otherUserId}) async {
     try {
-      final docId = _firestore.collection('Chats').doc(userId).id;
+      final docId = _firestore.collection('Chats').doc().id;
       final rawMessage = {
         'doc_id': docId,
         'message': message,
@@ -153,7 +130,11 @@ class Network {
       };
       await _firestore
           .collection('Chats')
-          .doc(userId)
+          .doc(chatDocId)
+          .update({'last_message': message});
+      await _firestore
+          .collection('Chats')
+          .doc(chatDocId)
           .collection('Messages')
           .add(rawMessage);
       return Message.fromJson(rawMessage);
@@ -177,5 +158,16 @@ class Network {
     } catch (e) {
       rethrow;
     }
+  }
+
+  Stream<List<Message>> liveChat({required String docId}) {
+    return FirebaseFirestore.instance
+        .collection('Chats')
+        .doc(docId)
+        .collection('Messages')
+        .orderBy('message_time', descending: false)
+        .snapshots()
+        .map((event) =>
+            event.docs.map((e) => Message.fromJson(e.data())).toList());
   }
 }

@@ -1,10 +1,10 @@
 import * as admin from "firebase-admin";
-import { addUserToChat } from "./chat/add_user_to_chat";
+import { addUserToDummyCollection } from "./add_user/add_user_to_dummy";
 
 admin.initializeApp();
 
 export {
-    addUserToChat
+    addUserToDummyCollection
 }
 
 // // Start writing functions

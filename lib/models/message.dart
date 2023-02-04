@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 class Message {
   String userId;
   String docId;
@@ -10,7 +12,10 @@ class Message {
       required this.messageTime,
       required this.userId});
 
-  factory Message.fromJson(Map<String, dynamic> json) {
+  factory Message.fromJson(Map map) {
+    final json = Map<String, dynamic>.from(map);
+    log(json.toString());
+
     return Message(
         docId: json['doc_id'],
         message: json['message'],
